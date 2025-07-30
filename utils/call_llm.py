@@ -71,15 +71,8 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
     model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
     # model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-04-17")
     
-    # Debug logging for environment differences
-    logger.info(f"Using model: {model}")
-    logger.info(f"Environment: {'HF_SPACE' if os.getenv('SPACE_ID') else 'LOCAL'}")
-    
     response = client.models.generate_content(model=model, contents=[prompt])
     response_text = response.text
-    
-    # Debug: Log response length and first 100 chars
-    logger.info(f"Response length: {len(response_text)}, First 100 chars: {response_text[:100]}...")
 
     # Log the response
     logger.info(f"RESPONSE: {response_text}")

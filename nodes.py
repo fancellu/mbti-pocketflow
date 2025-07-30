@@ -168,7 +168,7 @@ Provide a detailed analysis that:
 
 6. **Communication & Work Style**: Infer their communication and work preferences from their question responses.
 
-Must reference the actual questions provided above throughout your analysis using **bold question references** like **Q1**, **Q2**, etc. This will highlight the specific questions being discussed. Do not make assumptions about questions not provided.
+Must reference the actual questions provided above throughout your analysis using markdown anchor links like [Q1](#Q1), [Q2](#Q2), etc. This will create clickable links to the specific questions in the report. Do not make assumptions about questions not provided.
 """
         return call_llm(prompt)
     
