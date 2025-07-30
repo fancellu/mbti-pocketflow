@@ -73,6 +73,10 @@ python pf_cli.py --test --test-type INTJ
 python pf_cli.py --import-file questionnaire.json
 ```
 
+### 3. Live demo on HF Spaces
+
+https://huggingface.co/spaces/Fancellu/mbti-pocketflow
+
 ## Usage Examples
 
 ### Gradio Web Interface
