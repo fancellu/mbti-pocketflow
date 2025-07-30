@@ -477,4 +477,4 @@ def create_pocketflow_gradio_app():
 
 if __name__ == "__main__":
     demo = create_pocketflow_gradio_app()
-    demo.launch()
+    demo.launch(ssr_mode=False)
