@@ -241,13 +241,13 @@ class MBTIPocketFlowApp:
                     {str(type_badge) if type_badge else f'<div style="background: #4CAF50; color: white; padding: 10px 20px; border-radius: 5px; display: inline-block;">{mbti_type}</div>'}
                     {f'<p><em>{type_desc.text}</em></p>' if type_desc else ''}
                 </div>
-                
+
                 {responses_table_html}
-                
+
                 {strengths_html}
                 {weaknesses_html}
                 {careers_html}
-                
+
                 <div style="margin: 20px 0;">
                     <h2 style="color: #333; border-bottom: 2px solid #4CAF50;">Traditional Dimension Scores</h2>
                     <ul>
@@ -369,8 +369,8 @@ def create_pocketflow_gradio_app():
             export_btn = gr.Button("💾 Export Current Progress", variant="secondary")
             reset_btn = gr.Button("Reset Questionnaire")
 
-        # Hidden download button
-        export_download_btn = gr.DownloadButton(visible=False, elem_id="export_download_btn")
+        # File output for export
+        export_file_output = gr.File(label="Download Questionnaire", visible=False)
 
         # Analysis section
         with gr.Column(visible=False) as analyze_section:
@@ -385,8 +385,8 @@ def create_pocketflow_gradio_app():
             # Download report button
             download_report_btn = gr.Button("📊 Download Report", visible=False)
 
-        # Hidden download button for report
-        download_report_hidden = gr.DownloadButton(visible=False, elem_id="download_report_hidden")
+        # File output for report download
+        report_file_output = gr.File(label="Download Report", visible=False)
 
         # Event handlers
         length_radio.change(
@@ -418,17 +418,14 @@ def create_pocketflow_gradio_app():
             # Save current response and create file
             file_path = app.save_current_questionnaire(idx, resp)
             print(f"DEBUG: Export file path: {file_path}")
-            return file_path if file_path else None
+            if file_path:
+                return gr.update(value=file_path, visible=True)
+            return gr.update()
 
         export_btn.click(
             export_handler,
             inputs=[question_idx, response_slider],
-            outputs=[export_download_btn]
-        ).then(
-            fn=None,
-            inputs=None,
-            outputs=None,
-            js="() => document.querySelector('#export_download_btn').click()"
+            outputs=[export_file_output]
         )
 
         analyze_btn.click(
@@ -446,14 +443,14 @@ def create_pocketflow_gradio_app():
         )
 
         # Download report
+        def report_download_handler():
+            if app.last_report_path:
+                return gr.update(value=app.last_report_path, visible=True)
+            return gr.update()
+
         download_report_btn.click(
-            lambda: app.last_report_path if app.last_report_path else None,
-            outputs=[download_report_hidden]
-        ).then(
-            fn=None,
-            inputs=None,
-            outputs=None,
-            js="() => document.querySelector('#download_report_hidden').click()"
+            report_download_handler,
+            outputs=[report_file_output]
         )
 
         # Auto-save when slider changes and check for analysis button
