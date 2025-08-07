@@ -175,6 +175,7 @@ def generate_report(mbti_type, analysis, format="html"):
     <!DOCTYPE html>
     <html>
     <head>
+        <meta charset="utf-8">
         <title>MBTI Report - {mbti_type}</title>
         <style>
             :root {{
@@ -228,7 +229,7 @@ def generate_report(mbti_type, analysis, format="html"):
     <body>
         <div class="header">
             <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
-            <h1>Your Personality Type</h1>
+            <h1>Your Personality Type <a target="_blank" rel="noopener noreferrer" href="https://huggingface.co/spaces/Fancellu/mbti-pocketflow">mbti-pocketflow<a/></h1>
             <div class="type-badge">{mbti_type} - {type_info['name']}</div>
             <p><em>{type_info['description']}</em></p>
         </div>
