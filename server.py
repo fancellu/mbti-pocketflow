@@ -61,17 +61,8 @@ def get_mbti_questionnaire(length: int = 20) -> Dict[str, Any]:
     }
 
 
-@mcp.tool()
-def get_mbti_prompt(responses: Dict[str, int]) -> str:
-    """
-    Get the MBTI analysis prompt for self-analysis by LLMs.
-    
-    Args:
-        responses: Dictionary mapping question IDs to ratings (1-5)
-        
-    Returns:
-        Analysis prompt string for LLM self-analysis
-    """
+def _generate_mbti_prompt(responses: Dict[str, int]) -> str:
+    """Internal function to generate MBTI analysis prompt"""
     # Get scores and type
     normalized_responses, traditional_scores, mbti_type = _get_mbti_scores_and_type(responses)
 
@@ -115,6 +106,18 @@ Analyze:
 Reference specific questions in your analysis (e.g., "Q5 shows...", "Response to Q12 indicates...").
 """
 
+@mcp.tool()
+def get_mbti_prompt(responses: Dict[str, int]) -> str:
+    """
+    Get the MBTI analysis prompt for self-analysis by LLMs.
+    
+    Args:
+        responses: Dictionary mapping question IDs to ratings (1-5)
+        
+    Returns:
+        Analysis prompt string for LLM self-analysis
+    """
+    return _generate_mbti_prompt(responses)
 
 @mcp.tool()
 def analyze_mbti_responses(responses: Dict[str, int]) -> Dict[str, Any]:
@@ -128,7 +131,7 @@ def analyze_mbti_responses(responses: Dict[str, int]) -> Dict[str, Any]:
         Complete MBTI analysis including type, scores, and detailed analysis
     """
     # Get the analysis prompt (does all the heavy lifting)
-    llm_prompt = get_mbti_prompt(responses)
+    llm_prompt = _generate_mbti_prompt(responses)
 
     # Get scores and type (reuse common function)
     normalized_responses, traditional_scores, mbti_type = _get_mbti_scores_and_type(responses)
