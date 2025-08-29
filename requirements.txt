@@ -4,3 +4,4 @@ markdown~=3.8.2
 beautifulsoup4
 pocketflow
 fastmcp
+gradio>=5.38.2
