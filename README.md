@@ -23,11 +23,12 @@ A PocketFlow-based application for conducting Myers-Briggs Type Indicator (MBTI)
 - **HTML report generation** with clickable question references and comprehensive analysis
 - **Data export/import** for saving and resuming questionnaires
 - **CLI and test modes** for different use cases
+- **🆕 MCP Server** for LLMs to take MBTI tests themselves via Model Context Protocol
 
 ## Project Structure
 
 ```
-/mbt/
+
 ├── utils/
 │   ├── call_llm.py          # LLM integration (Gemini)
 │   ├── questionnaire.py     # Question sets (20/40/60) and loading/saving
@@ -38,7 +39,12 @@ A PocketFlow-based application for conducting Myers-Briggs Type Indicator (MBTI)
 ├── flow.py                  # PocketFlow flow definition
 ├── app.py                   # **Main Gradio web interface with LLM**
 ├── pf_cli.py                # PocketFlow CLI interface
+├── README.md                # Main README
+├── server.py                # FastMCP server for LLMs to take MBTI tests
+├── MCP_README.md            # MCP README
+├── Dockerfile               # Dockerfile for MCP server deployment
 └── requirements.txt         # Dependencies
+
 ```
 
 ## Quick Start
@@ -73,7 +79,23 @@ python pf_cli.py --test --test-type INTJ
 python pf_cli.py --import-file questionnaire.json
 ```
 
-### 3. Live demo on HF Spaces
+### 3. MCP Server (For LLMs)
+
+```bash
+# Install MCP server dependencies
+cd mcp_server
+pip install -r requirements.txt
+
+# Set up API key
+export GEMINI_API_KEY="your-api-key-here"
+
+# Run MCP server
+python server.py
+```
+
+Allows LLMs to take MBTI tests via Model Context Protocol. See `mcp_server/README.md` for details.
+
+### 4. Live demo on HF Spaces
 
 https://huggingface.co/spaces/Fancellu/mbti-pocketflow
 
