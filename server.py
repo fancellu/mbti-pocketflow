@@ -20,8 +20,9 @@ from utils.call_llm import call_llm
 mcp = FastMCP("MBTI Personality Test Server")
 
 
-def _get_mbti_scores_and_type(responses: Dict[str, int]):
+def _get_mbti_scores_and_type(responses: Dict[str, Any]):
     """Common function to get normalized responses, scores, and MBTI type"""
+    # Extract just the numeric responses for scoring
     normalized_responses = {int(k): int(v) for k, v in responses.items() if k.isdigit()}
     traditional_scores = traditional_mbti_score(normalized_responses)
     mbti_type = determine_mbti_type(traditional_scores)
@@ -61,17 +62,25 @@ def get_mbti_questionnaire(length: int = 20) -> Dict[str, Any]:
     }
 
 
-def _generate_mbti_prompt(responses: Dict[str, int]) -> str:
-    """Internal function to generate MBTI analysis prompt"""
+def _generate_mbti_prompt(responses: Dict[str, Any]) -> str:
+    """Internal function to generate MBTI analysis prompt with full question context"""
     # Get scores and type
     normalized_responses, traditional_scores, mbti_type = _get_mbti_scores_and_type(responses)
+    
+    # Questions must be provided in responses
+    questions = responses['_questions']
+    question_lookup = {q['id']: q for q in questions}
 
-    # Format responses for LLM analysis
+    # Format responses for LLM analysis with full question text
     formatted_responses = []
+    
     for q_id, response_val in normalized_responses.items():
         response_text = {1: "Strongly Disagree", 2: "Disagree", 3: "Neutral",
-                         4: "Agree", 5: "Strongly Agree"}[response_val]
-        formatted_responses.append(f"Q{q_id}: Response - **{response_text}**")
+                       4: "Agree", 5: "Strongly Agree"}[response_val]
+        
+        q = question_lookup[q_id]
+        dimension = q.get('dimension', 'Unknown')
+        formatted_responses.append(f"Q{q['id']} ({dimension}): {q['text']} - **{response_text}**")
 
     # Generate dimension info
     dimension_info = []
@@ -83,36 +92,44 @@ def _generate_mbti_prompt(responses: Dict[str, int]) -> str:
         percentage = max(score1, score2) * 100
         dimension_info.append(f"{dim1}/{dim2}: {stronger} ({percentage:.1f}%)")
 
-    # Return the analysis prompt
+    # Return comprehensive analysis prompt
     return f"""
 You are analyzing MBTI questionnaire responses for an AI system determined to be {mbti_type} type.
 
-Here are the responses:
+Here are their EXACT responses to each question:
 
 {chr(10).join(formatted_responses)}
 
 Traditional scoring results:
 {chr(10).join(dimension_info)}
 
-Provide a detailed analysis of this {mbti_type} personality type based on the response patterns shown above.
+IMPORTANT: You have been provided with the complete set of questions and responses above. Please analyze these SPECIFIC responses.
 
-Analyze:
-1. **Response Pattern Analysis**: How the responses support the {mbti_type} determination
-2. **Characteristic Alignment**: How responses align with typical {mbti_type} traits
-3. **Behavioral Patterns**: Key patterns shown in the responses
-4. **Strengths & Growth Areas**: Based on the response patterns
-5. **Communication & Work Style**: Inferred from the responses
+Provide a detailed analysis that:
 
-Reference specific questions in your analysis (e.g., "Q5 shows...", "Response to Q12 indicates...").
+1. **Response Pattern Analysis**: Identify which responses strongly support the {mbti_type} determination and which might seem unexpected. Reference specific questions (e.g., "Q5 shows...", "Your response to Q12 indicates...").
+
+2. **Characteristic Alignment**: Explain how their responses align with typical {mbti_type} characteristics, citing specific questions as evidence.
+
+3. **Out-of-Character Responses**: Point out any responses that seem inconsistent with typical {mbti_type} patterns and provide possible explanations.
+
+4. **Behavioral Patterns**: Describe key behavioral patterns shown through their responses, referencing the relevant questions.
+
+5. **Strengths & Growth Areas**: Based on their specific responses, identify strengths they demonstrate and areas for potential growth.
+
+6. **Communication & Work Style**: Infer their communication and work preferences from their question responses.
+
+Must reference the actual questions provided above throughout your analysis using markdown anchor links like [Q1](#Q1), [Q2](#Q2), etc. This will create clickable links to the specific questions in the report. Do not make assumptions about questions not provided.
 """
 
 @mcp.tool()
-def get_mbti_prompt(responses: Dict[str, int]) -> str:
+def get_mbti_prompt(responses: Dict[str, Any]) -> str:
     """
     Get the MBTI analysis prompt for self-analysis by LLMs.
     
     Args:
         responses: Dictionary mapping question IDs to ratings (1-5)
+                  Must include '_questions' key with question definitions
         
     Returns:
         Analysis prompt string for LLM self-analysis
@@ -120,12 +137,13 @@ def get_mbti_prompt(responses: Dict[str, int]) -> str:
     return _generate_mbti_prompt(responses)
 
 @mcp.tool()
-def analyze_mbti_responses(responses: Dict[str, int]) -> Dict[str, Any]:
+def analyze_mbti_responses(responses: Dict[str, Any]) -> Dict[str, Any]:
     """
     Analyze MBTI questionnaire responses and return personality analysis.
     
     Args:
         responses: Dictionary mapping question IDs to ratings (1-5)
+                  Must include '_questions' key with question definitions
         
     Returns:
         Complete MBTI analysis including type, scores, and detailed analysis
