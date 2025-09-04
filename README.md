@@ -83,7 +83,6 @@ python pf_cli.py --import-file questionnaire.json
 
 ```bash
 # Install MCP server dependencies
-cd mcp_server
 pip install -r requirements.txt
 
 # Set up API key
@@ -93,7 +92,7 @@ export GEMINI_API_KEY="your-api-key-here"
 python server.py
 ```
 
-Allows LLMs to take MBTI tests via Model Context Protocol. See `mcp_server/README.md` for details.
+Allows LLMs to take MBTI tests via Model Context Protocol. See `MCP_README.md` for details.
 
 ### 4. Live demo on HF Spaces
 

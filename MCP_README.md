@@ -15,7 +15,6 @@ An MCP (Model Context Protocol) server that allows LLMs to take MBTI personality
 ### Installation
 
 ```bash
-cd mcp_server
 pip install -r requirements.txt
 
 # Set up Gemini API key for LLM analysis
