@@ -68,7 +68,7 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
         api_key=os.getenv("GEMINI_API_KEY", ""),
     )
     # pro was too slow and janky
-    model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    model = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
     # model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-04-17")
     
     response = client.models.generate_content(model=model, contents=[prompt])
