@@ -1,3 +1,33 @@
+# App output
 mbti_questionnaire_*.json
 mbti_report_*.*
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+.env.*
+
+# IDE / AI assistant tooling
 .idea/
+.vscode/
+.amazonq/
+q-dev-chat-*.md
+
+# OS
+.DS_Store
+Thumbs.db
