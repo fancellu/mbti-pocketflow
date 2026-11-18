@@ -34,7 +34,7 @@ import tempfile
 cache_file = os.path.join(tempfile.gettempdir(), "llm_cache.json")
 
 
-# By default, we Google Gemini 2.5 pro, as it shows great performance for code understanding
+# Uses Google Gemini (stable Flash model by default; see GEMINI_MODEL below)
 def call_llm(prompt: str, use_cache: bool = True) -> str:
     # Log the prompt
     logger.info(f"PROMPT: {prompt}")
@@ -67,10 +67,10 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
     client = genai.Client(
         api_key=os.getenv("GEMINI_API_KEY", ""),
     )
-    # pro was too slow and janky
-    model = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
-    # model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-04-17")
-    
+    # Flash over pro: pro was too slow and janky. Override with GEMINI_MODEL
+    # (e.g. "gemini-4-hydrogen").
+    model = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+
     response = client.models.generate_content(model=model, contents=[prompt])
     response_text = response.text
 

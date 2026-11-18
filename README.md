@@ -60,6 +60,9 @@ export GEMINI_API_KEY="your-api-key-here"
 # Or on Windows:
 set GEMINI_API_KEY=your-api-key-here
 
+# Optional: override the model (default: gemini-3.8-flash)
+export GEMINI_MODEL="gemini-4-hydrogen"
+
 # Run Gradio web interface
 python app.py
 ```
@@ -179,7 +182,7 @@ The application recognizes all 16 MBTI personality types:
 **Required:**
 - Python 3.8+
 - gradio>=4.0.0 (web interface)
-- google-genai>=0.3.0 (LLM analysis)
+- google-genai>=3.5.0 (LLM analysis)
 - beautifulsoup4 (HTML parsing)
 - markdown (report generation)
 
