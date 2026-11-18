@@ -182,7 +182,7 @@ The application recognizes all 16 MBTI personality types:
 **Required:**
 - Python 3.8+
 - gradio>=4.0.0 (web interface)
-- google-genai>=3.5.0 (LLM analysis)
+- google-genai>=2.8.0 (LLM analysis)
 - beautifulsoup4 (HTML parsing)
 - markdown (report generation)
 
