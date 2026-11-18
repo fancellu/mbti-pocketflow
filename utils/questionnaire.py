@@ -36,7 +36,7 @@ BASE_QUESTIONS = [
 # Additional 20 questions for 40-question version
 EXTENDED_QUESTIONS = [
     # E/I questions (5 more)
-    {"id": 21, "text": "You find it easy to stay relaxed and focused even when there is some pressure.", "dimension": "I"},
+    {"id": 21, "text": "You would rather spend a quiet evening on your own than go out with a group.", "dimension": "I"},
     {"id": 22, "text": "You are energized by being around other people.", "dimension": "E"},
     {"id": 23, "text": "You prefer to have a few close friends rather than many acquaintances.", "dimension": "I"},
     {"id": 24, "text": "You enjoy being the center of attention.", "dimension": "E"},
@@ -50,10 +50,10 @@ EXTENDED_QUESTIONS = [
     {"id": 30, "text": "You trust experience more than theory.", "dimension": "S"},
     
     # T/F questions (5 more)
-    {"id": 31, "text": "You consider yourself more practical than creative.", "dimension": "T"},
+    {"id": 31, "text": "You consider yourself more practical than creative.", "dimension": "S"},
     {"id": 32, "text": "You find it easy to empathize with a person whose experiences are very different from yours.", "dimension": "F"},
     {"id": 33, "text": "You think that everyone's views should be respected regardless of whether they are supported by facts or not.", "dimension": "F"},
-    {"id": 34, "text": "You feel more drawn to places with busy, bustling atmospheres than quiet, intimate places.", "dimension": "T"},
+    {"id": 34, "text": "You feel more drawn to places with busy, bustling atmospheres than quiet, intimate places.", "dimension": "E"},
     {"id": 35, "text": "You are more concerned with truth than with people's feelings.", "dimension": "T"},
     
     # J/P questions (5 more)

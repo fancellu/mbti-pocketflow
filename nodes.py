@@ -91,10 +91,13 @@ class AnalyzeResponsesBatchNode(BatchNode):
 
 class TraditionalScoringNode(Node):
     def prep(self, shared):
-        return shared["questionnaire"]["responses"]
-    
-    def exec(self, responses):
-        return traditional_mbti_score(responses)
+        # Score against the questions actually asked (40/60-question or custom
+        # questionnaires); None falls back to the built-in question bank.
+        return shared["questionnaire"]["responses"], shared["questionnaire"].get("questions") or None
+
+    def exec(self, inputs):
+        responses, questions = inputs
+        return traditional_mbti_score(responses, questions)
     
     def post(self, shared, prep_res, exec_res):
         shared["analysis"]["traditional_scores"] = exec_res

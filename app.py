@@ -161,7 +161,7 @@ class MBTIPocketFlowApp:
             export_data = ExportDataNode()
 
             # Connect partial flow
-            analyze_responses >> traditional_scoring >> llm_analysis >> determine_type >> generate_report >> export_data
+            analyze_responses >> traditional_scoring >> determine_type >> llm_analysis >> generate_report >> export_data
             analysis_flow = Flow(start=analyze_responses)
 
             # Run the flow

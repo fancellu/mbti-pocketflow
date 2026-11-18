@@ -4,29 +4,67 @@ MCP Server for MBTI Personality Testing
 Allows LLMs to take MBTI personality tests and get analysis
 """
 
-import sys
 import os
+from datetime import datetime
 from typing import Dict, List, Any
 
-# Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from fastmcp import FastMCP
-from utils.questionnaire import get_questionnaire_by_length
-from utils.mbti_scoring import traditional_mbti_score, determine_mbti_type
+from utils.questionnaire import get_questionnaire_by_length, SIXTY_QUESTIONS
+from utils.mbti_scoring import traditional_mbti_score, determine_mbti_type, PAIRS
 from utils.call_llm import call_llm
 
 # Initialize MCP server
 mcp = FastMCP("MBTI Personality Test Server")
 
 
+RESPONSE_TEXT = {1: "Strongly Disagree", 2: "Disagree", 3: "Neutral",
+                 4: "Agree", 5: "Strongly Agree"}
+
+
+def _parse_responses(responses: Dict[str, Any]):
+    """Validate responses and return (ratings by question id, questions answered).
+
+    '_questions' is optional; without it the built-in question bank is used.
+    Raises ValueError with a clear message for unknown ids or bad ratings.
+    """
+    questions = responses.get('_questions') or SIXTY_QUESTIONS
+    question_lookup = {int(q['id']): q for q in questions}
+
+    ratings = {}
+    errors = []
+    for key, value in responses.items():
+        if str(key).startswith('_'):
+            continue
+        try:
+            q_id = int(key)
+        except ValueError:
+            errors.append(f"'{key}' is not a question id")
+            continue
+        if q_id not in question_lookup:
+            errors.append(f"Q{q_id} is not in the questionnaire")
+            continue
+        try:
+            rating = int(value)
+        except (TypeError, ValueError):
+            rating = None
+        if rating not in RESPONSE_TEXT:
+            errors.append(f"Q{q_id} rating must be an integer 1-5, got {value!r}")
+            continue
+        ratings[q_id] = rating
+
+    if errors:
+        raise ValueError("Invalid responses: " + "; ".join(errors))
+    if not ratings:
+        raise ValueError("No responses provided")
+    return ratings, [question_lookup[q_id] for q_id in sorted(ratings)]
+
+
 def _get_mbti_scores_and_type(responses: Dict[str, Any]):
-    """Common function to get normalized responses, scores, and MBTI type"""
-    # Extract just the numeric responses for scoring
-    normalized_responses = {int(k): int(v) for k, v in responses.items() if k.isdigit()}
-    traditional_scores = traditional_mbti_score(normalized_responses)
+    """Validate responses, then score them against the questions answered"""
+    ratings, questions = _parse_responses(responses)
+    traditional_scores = traditional_mbti_score(ratings, questions)
     mbti_type = determine_mbti_type(traditional_scores)
-    return normalized_responses, traditional_scores, mbti_type
+    return ratings, questions, traditional_scores, mbti_type
 
 
 @mcp.tool()
@@ -62,30 +100,18 @@ def get_mbti_questionnaire(length: int = 20) -> Dict[str, Any]:
     }
 
 
-def _generate_mbti_prompt(responses: Dict[str, Any]) -> str:
-    """Internal function to generate MBTI analysis prompt with full question context"""
-    # Get scores and type
-    normalized_responses, traditional_scores, mbti_type = _get_mbti_scores_and_type(responses)
-    
-    # Questions must be provided in responses
-    questions = responses['_questions']
-    question_lookup = {q['id']: q for q in questions}
-
+def _build_mbti_prompt(ratings, questions, traditional_scores, mbti_type) -> str:
+    """Build the MBTI analysis prompt with full question context"""
     # Format responses for LLM analysis with full question text
-    formatted_responses = []
-    
-    for q_id, response_val in normalized_responses.items():
-        response_text = {1: "Strongly Disagree", 2: "Disagree", 3: "Neutral",
-                       4: "Agree", 5: "Strongly Agree"}[response_val]
-        
-        q = question_lookup[q_id]
-        dimension = q.get('dimension', 'Unknown')
-        formatted_responses.append(f"Q{q['id']} ({dimension}): {q['text']} - **{response_text}**")
+    formatted_responses = [
+        f"Q{q['id']} ({q.get('dimension', 'Unknown')}): {q['text']} - "
+        f"**{RESPONSE_TEXT[ratings[int(q['id'])]]}**"
+        for q in questions
+    ]
 
     # Generate dimension info
     dimension_info = []
-    pairs = [('E', 'I'), ('S', 'N'), ('T', 'F'), ('J', 'P')]
-    for dim1, dim2 in pairs:
+    for dim1, dim2 in PAIRS:
         score1 = traditional_scores.get(f'{dim1}_score', 0.5)
         score2 = traditional_scores.get(f'{dim2}_score', 0.5)
         stronger = dim1 if score1 > score2 else dim2
@@ -128,13 +154,14 @@ def get_mbti_prompt(responses: Dict[str, Any]) -> str:
     Get the MBTI analysis prompt for self-analysis by LLMs.
     
     Args:
-        responses: Dictionary mapping question IDs to ratings (1-5)
-                  Must include '_questions' key with question definitions
-        
+        responses: Dictionary mapping question IDs to ratings (1-5).
+                  Optional '_questions' key with the question definitions
+                  that were asked; defaults to the built-in questions.
+
     Returns:
         Analysis prompt string for LLM self-analysis
     """
-    return _generate_mbti_prompt(responses)
+    return _build_mbti_prompt(*_get_mbti_scores_and_type(responses))
 
 @mcp.tool()
 def analyze_mbti_responses(responses: Dict[str, Any]) -> Dict[str, Any]:
@@ -142,17 +169,15 @@ def analyze_mbti_responses(responses: Dict[str, Any]) -> Dict[str, Any]:
     Analyze MBTI questionnaire responses and return personality analysis.
     
     Args:
-        responses: Dictionary mapping question IDs to ratings (1-5)
-                  Must include '_questions' key with question definitions
-        
+        responses: Dictionary mapping question IDs to ratings (1-5).
+                  Optional '_questions' key with the question definitions
+                  that were asked; defaults to the built-in questions.
+
     Returns:
         Complete MBTI analysis including type, scores, and detailed analysis
     """
-    # Get the analysis prompt (does all the heavy lifting)
-    llm_prompt = _generate_mbti_prompt(responses)
-
-    # Get scores and type (reuse common function)
-    normalized_responses, traditional_scores, mbti_type = _get_mbti_scores_and_type(responses)
+    ratings, questions, traditional_scores, mbti_type = _get_mbti_scores_and_type(responses)
+    llm_prompt = _build_mbti_prompt(ratings, questions, traditional_scores, mbti_type)
 
     try:
         llm_analysis = call_llm(llm_prompt)
@@ -161,11 +186,10 @@ def analyze_mbti_responses(responses: Dict[str, Any]) -> Dict[str, Any]:
 
     # Calculate confidence scores
     confidence_scores = {}
-    pairs = [('E', 'I'), ('S', 'N'), ('T', 'F'), ('J', 'P')]
-    for dim1, dim2 in pairs:
+    for dim1, dim2 in PAIRS:
         score1 = traditional_scores.get(f'{dim1}_score', 0.5)
         score2 = traditional_scores.get(f'{dim2}_score', 0.5)
-        confidence = abs(score1 - score2)
+        confidence= abs(score1 - score2)
         confidence_scores[f'{dim1}{dim2}_confidence'] = confidence
 
     return {
@@ -199,8 +223,8 @@ def analyze_mbti_responses(responses: Dict[str, Any]) -> Dict[str, Any]:
             }
         },
         "llm_analysis": llm_analysis,
-        "response_count": len(normalized_responses),
-        "analysis_timestamp": __import__('datetime').datetime.now().isoformat()
+        "response_count": len(ratings),
+        "analysis_timestamp": datetime.now().isoformat()
     }
 
 
