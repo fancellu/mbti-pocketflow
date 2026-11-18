@@ -1,0 +1,25 @@
+name: Sync to Hugging Face Space
+
+# Mirror main to the Space (https://huggingface.co/spaces/Fancellu/mbti-pocketflow)
+# with a plain git push, so both repos keep identical history.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: sync-to-hf-space
+  cancel-in-progress: false
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Push to Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: git push https://Fancellu:$HF_TOKEN@huggingface.co/spaces/Fancellu/mbti-pocketflow HEAD:main
